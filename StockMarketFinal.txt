@@ -1,0 +1,218 @@
+Sub SolveStockMarket()
+
+    Dim xSh As Worksheet
+    Application.ScreenUpdating = False
+    For Each xSh In Worksheets
+        xSh.Select
+        Call Titles
+        Call TotalStockVolume
+        Call OP_ED
+        Call GreatestPercent
+        
+    Next
+    Application.ScreenUpdating = True
+End Sub
+
+Sub Titles():
+
+    Cells(1, "J").Value = "Tickers"
+    Cells(1, "K").Value = "Total Stock Volume"
+    Cells(1, "L").Value = "Yearly Change"
+    Cells(1, "M").Value = "Percent Change"
+
+    Cells(1, "Q").Value = "Ticker"
+    Cells(1, "R").Value = "Value"
+    Cells(2, "P").Value = "Greatest % Increase"
+    Cells(3, "P").Value = "Greatest % Decrease"
+    Cells(4, "P").Value = "Greatest Total Volume"
+    
+End Sub
+
+Sub TotalStockVolume():
+
+    Dim Ticker As String
+    Ticker = Cells(2, 1)
+    Cells(2, 10).Value = Ticker
+    
+    Dim Row As Integer
+    Row = 2
+    
+    Dim Total As Double
+    Total = 0
+    
+    Dim LRow As Long
+    LRow = LastRow()
+    'MsgBox (LRow)
+    
+    For i = 2 To LRow
+        
+        If (Cells(i, 1).Value = Ticker) Then
+            Total = Total + Cells(i, 7).Value
+            Cells(Row, 11).Value = Total
+        Else
+            Ticker = Cells(i, 1).Value
+            Total = Cells(i, 7).Value
+            Row = Row + 1
+            Cells(Row, 10).Value = Ticker
+        End If
+    Next i
+End Sub
+
+Function LastRow() As Long:
+
+    Dim LRow As Long
+    LRow = Cells(Rows.Count, 1).End(xlUp).Row
+    LastRow = LRow
+    
+End Function
+
+Function LastRows(Column As Integer) As Long: 'paramater is the column of which you want to find LastRow
+
+    Dim LRow As Long
+    LRow = Cells(Rows.Count, Column).End(xlUp).Row
+    LastRows = LRow
+    
+End Function
+
+Sub OP_ED():
+
+    Dim OP As Double
+    OP = 0
+    
+    Dim ED As Double
+    ED = 0
+    
+    Dim Ticker As String
+    Ticker = Cells(2, 1)
+    
+    Dim Row As Integer
+    Row = 2
+    
+    Dim Row2 As Integer
+    Row2 = 2
+    
+    Dim Total As Double
+    Total = 0
+    
+    Dim LRow As Long
+    LRow = LastRow()
+    
+    Dim PercentChange As Double
+    
+    Dim YearlyChange As Double
+    
+    For i = 2 To LRow
+    
+        If i = 2 Then
+            OP = Cells(i, 3).Value
+            'Cells(Row, 12).Value = OP get rid of these after test
+        ElseIf Not Cells(i, 1).Value = Ticker Then
+            Ticker = Cells(i, 1).Value
+            ED = Cells(i - 1, 6).Value
+            
+            YearlyChange = ED - OP
+            Cells(Row, 12).Value = YearlyChange
+            
+            If (YearlyChange < 0) Then
+                Cells(Row, 12).Interior.ColorIndex = 3
+            Else
+                Cells(Row, 12).Interior.ColorIndex = 10
+            End If
+            
+            If OP = 0 Then
+                PercentChange = 0
+            Else
+                PercentChange = (ED - OP) / OP * 100 'running into overflow error here due to divisible by zero make ifstatement
+            End If
+            
+            Cells(Row, 13).Value = PercentChange
+            OP = Cells(i, 3).Value
+            Row = Row + 1
+            Cells(Row, 3).Value = OP
+        ElseIf i = LRow Then
+            ED = Cells(i, 6).Value
+            
+            YearlyChange = ED - OP
+            
+            If OP = 0 Then
+                PercentChange = 0
+            Else
+                PercentChange = (ED - OP) / OP * 100
+            End If
+            
+            If (YearlyChange < 0) Then
+                Cells(Row, 12).Interior.ColorIndex = 3
+            Else
+                Cells(Row, 12).Interior.ColorIndex = 10
+            End If
+            
+            Cells(Row, 12).Value = YearlyChange
+            Cells(Row, 13).Value = PercentChange
+            'Cells(Row, 13).Value = ED
+            
+        End If
+            
+        'If Cells(i, 2).Value = 20140101 Then
+            'OP = Cells(i, 3).Value
+            'Cells(Row, 12).Value = OP
+            'Row = Row + 1
+            'If i > 2 Then
+                'ED = Cells(i - 1, 6).Value
+                'Cells(Row2, 13).Value = ED
+                'Row = Row + 1
+            'End If
+        'ElseIf Cells(i, 1).Value = Ticker And Cells(i, 2).Value = 20141230 Then
+            'ED = Cells(i, 6).Value
+            'Cells(Row2, 13).Value = ED
+            'Row2 = Row2 + 1
+            'insert the percentage and yearly change
+        'ElseIf (Not Cells(i, l).Value = Ticker) Then
+            'Ticker = Cells(i, 1).Value
+            'Row = Row + 1
+        
+    Next i
+    
+End Sub
+
+Sub GreatestPercent()
+
+        'Q column is Ticker and R is Value
+        '2 is %increase
+        '3 is %decrease
+        '4 is Total Volume
+        
+    Dim PercentMin As Double
+    Dim PercentMax As Double
+    'Dim VolumeMax As Long <- apparently needs to be a double
+    
+    Dim LRow As Long
+    LRow = LastRows(10)
+    
+    For i = 2 To LRow
+        If Cells(i, "M").Value > PercentMax Then
+            PercentMax = Cells(i, "M").Value
+            Cells(2, "Q").Value = Cells(i, "J").Value
+            Cells(2, "R").Value = PercentMax
+        End If
+    Next i
+    
+    For i = 2 To LRow
+        If Cells(i, "M").Value < PercentMin Then
+            PercentMin = Cells(i, "M").Value
+            Cells(3, "Q").Value = Cells(i, "J").Value
+            Cells(3, "R").Value = PercentMin
+        End If
+    Next i
+    
+    For i = 2 To LRow
+        If Cells(i, 11).Value > Cells(4, "R").Value Then
+            'VolumeMax = Cells(i, 11).Value2
+            'VolumeMax = CLng(Cells(i, 11).Value)
+            'VolumeMax = Cells(i,11).Value
+            Cells(4, "Q").Value = Cells(i, "J").Value
+            'Cells(4, "R").Value = VolumeMax
+            Cells(4, "R").Value = Cells(i, 11).Value
+        End If
+    Next i
+
+End Sub
